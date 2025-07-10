@@ -1,0 +1,80 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           trout-web
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/Osrepnay/trout-web#readme>
+homepage:       https://github.com/Osrepnay/trout-web#readme
+bug-reports:    https://github.com/Osrepnay/trout-web/issues
+author:         Osrepnay
+maintainer:     example@example.com
+copyright:      2025 Osrepnay
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/Osrepnay/trout-web
+
+library
+  exposed-modules:
+      Export
+      Wrapper
+  other-modules:
+      Paths_trout_web
+  autogen-modules:
+      Paths_trout_web
+  hs-source-dirs:
+      src
+  ghc-options:
+      -Wall
+      -Wcompat
+      -Widentities
+      -Wincomplete-record-updates
+      -Wincomplete-uni-patterns
+      -Wmissing-export-lists
+      -Wmissing-home-modules
+      -Wpartial-fields
+      -Wredundant-constraints
+  -- if !os(wasi)
+  --   build-depends: ghc-wasm-compat
+  --   ghc-options: -fplugin GHC.Wasm.FFI.Plugin
+  build-depends:
+      base >=4.7 && <5
+    , trout
+    , transformers
+  default-language: GHC2021
+
+executable trout-web-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_trout_web
+  autogen-modules:
+      Paths_trout_web
+  hs-source-dirs:
+      app
+  ghc-options:
+      -Wall
+      -Wcompat
+      -Widentities
+      -Wincomplete-record-updates
+      -Wincomplete-uni-patterns
+      -Wmissing-export-lists
+      -Wmissing-home-modules
+      -Wpartial-fields
+      -Wredundant-constraints
+      -no-hs-main
+      -optl-mexec-model=reactor
+      "-optl-Wl,--export=initialize,--export=ffiNewGame,--export=ffiNewEnv,--export=ffiMakeMove,--export=ffiBestMove"
+  build-depends:
+      base >=4.7 && <5
+    , trout
+    , trout-web
+  default-language: GHC2021

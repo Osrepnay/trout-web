@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@bjorn3/browser_wasi_shim": "^0.4.2",
+    "@lichess-org/chessground": "^9.2.3",
+    "chess.js": "^1.4.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.6"
+  },
+  "scripts": {
+    "build": "./build-site.sh"
+  }
+}
