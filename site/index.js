@@ -19,20 +19,6 @@ function updateDests() {
     ground.set({ movable: { dests: dests } });
 }
 
-// TODO promotions!!!!!
-function moveUpdate(moveFrom, moveTo, movePromo) {
-    worker.postMessage(["makeMove", moveFrom, moveTo, 0]);
-    chess.move(moveFrom + moveTo + movePromo);
-    ground.set({ check: chess.inCheck() });
-}
-
-function programmaticMove(moveFrom, moveTo, movePromo) {
-    ground.move(moveFrom, moveTo);
-    ground.set({ turnColor: playerColor });
-    moveUpdate(moveFrom, moveTo);
-    updateDests();
-}
-
 let troutImg = document.getElementById("trout-img");
 
 function troutNeutral() {
@@ -43,6 +29,63 @@ function troutNeutral() {
 function troutThink() {
     troutImg.src = "trout_think.png";
     troutImg.alt = "trout thinking";
+}
+
+function troutDead() {
+    troutNeutral();
+    troutImg.style = "transform: scale(1, -1)";
+}
+
+function gameOver() {
+    ground.set({ viewOnly: true });
+}
+
+let wastedWrapper = document.getElementById("wasted-wrapper");
+
+function playerLose() {
+    gameOver();
+    let wastedInner = document.getElementById("wasted");
+    wastedInner.style.display = "none";
+    wastedWrapper.style.zIndex = "999";
+    wastedWrapper.classList.add("wasted-wrapper-darken");
+    setTimeout(() => wastedInner.style.display = "flex", 1500);
+}
+
+function playerWin() {
+    gameOver();
+    troutDead();
+}
+
+function playerDraw() {
+    gameOver();
+    troutImg.src = "draw.png";
+}
+
+// TODO promotions!!!!!
+function moveUpdate(moveFrom, moveTo, movePromo) {
+    worker.postMessage(["makeMove", moveFrom, moveTo, 0]);
+    chess.move(moveFrom + moveTo + movePromo);
+    ground.set({ check: chess.inCheck() });
+    if (chess.isGameOver()) {
+        if (chess.isCheckmate()) {
+            // player got mated
+            if (chess.turn() === playerColor.charAt(0)) {
+                playerLose();
+            } else {
+                playerWin();
+            }
+        // draw
+        } else {
+            playerDraw();
+        }
+    }
+}
+
+function programmaticMove(moveFrom, moveTo, movePromo) {
+    ground.move(moveFrom, moveTo);
+    ground.set({ turnColor: playerColor });
+    moveUpdate(moveFrom, moveTo);
+    updateDests();
 }
 
 let maxDepthTimeElem = document.getElementById("max-depth-time");
