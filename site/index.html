@@ -4,14 +4,99 @@
     <link rel="stylesheet" type="text/css" href="dist/assets/chessground.brown.css">
     <link rel="stylesheet" type="text/css" href="dist/assets/chessground.cburnett.css">
 <style>
+/* center body vertically if phone (too tall) */
+html {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+body {
+    margin: 0px;
+}
+
+#board-container {
+    width: min(90%, 50vh);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 #board {
     aspect-ratio: 1 / 1;
-    width: min(100%, 50em);
+    width: 100%;
     margin-inline: auto;
+}
+
+#color-chooser {
+    display: flex;
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    min-height: 100%;
+    z-index: 999;
+}
+
+.overlay-side {
+    flex-grow: 1;
+    font-size: 48pt;
+    display: flex;
+    align-items: center;
+}
+
+#white-overlay {
+    background-color: #ffffffb0;
+}
+
+#black-overlay {
+    background-color: #000000b0;
+}
+
+.color-text {
+    padding-inline: 1em;
+}
+
+#options {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+}
+
+#trout-img {
+    width: 70%;
 }
 </style>
     <body>
-        <div class="chessground" id="board"></div>
+        <div id="color-chooser">
+            <div class="overlay-side" id="white-overlay" style="justify-content: flex-end">
+                <p class="color-text" style="color: #000">white</p>
+            </div>
+            <div class="overlay-side" id="black-overlay" style="justify-content: flex-start">
+                <p class="color-text" style="color: #fff">black</p>
+            </div>
+        </div>
+
+        <main>
+            <div id="board-container">
+                <img id="trout-img" src="trout.png" alt="trout neutral">
+                <div class="chessground" id="board"></div>
+            </div>
+            <div id="options">
+                <label for="max-depth-time">Max time for each depth (100-1000, ms), roughly controls time spent and strength</label>
+                <br>
+                <input type="range" id="max-depth-time" name="max-depth-time" min="100" max="1000"> 
+            </div>
+        </main>
         <script src="dist/index.js" type="module"></script>
     </body>
 </html>
