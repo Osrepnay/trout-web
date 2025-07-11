@@ -37,7 +37,7 @@ jobs:
         run: curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
       - name: Install WASM GHC build
         run: |
-          curl https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/raw/master/bootstrap.sh | SKIP_GHC=1 sh
+          curl https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/raw/master/bootstrap.sh | BOOTSTRAP_HASKELL_MINIMAL=1 SKIP_GHC=1 sh
           source ~/.ghc-wasm/env
           ghcup config add-release-channel https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/raw/master/ghcup-wasm-0.0.9.yaml
           ghcup install ghc --set wasm32-wasi-9.10.1 -- --host=x86_64-linux --target=wasm32-wasi --with-intree-gmp --with-system-libffi
