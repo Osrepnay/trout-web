@@ -44,7 +44,9 @@ jobs:
           ghcup config add-release-channel https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/raw/master/ghcup-wasm-0.0.9.yaml
           ghcup install ghc --set wasm32-wasi-9.10.1 -- --host=x86_64-linux --target=wasm32-wasi --with-intree-gmp --with-system-libffi
       - name: Install Cabal
-        run: ghcup install cabal 3.12.1.0
+        run: |
+          cabal update
+          ghcup install cabal 3.12.1.0
       - name: Install npm
         run: sudo apt-get -y install npm
       - name: Build site
