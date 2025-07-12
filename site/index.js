@@ -63,9 +63,39 @@ function playerDraw() {
 
 // TODO promotions!!!!!
 function moveUpdate(moveFrom, moveTo, movePromo) {
-    worker.postMessage(["makeMove", moveFrom, moveTo, 0]);
-    chess.move(moveFrom + moveTo + movePromo);
+    worker.postMessage(["makeMove", moveFrom, moveTo, movePromo]);
+
+    // kinda gross because generates all moves to find one but
+    // its not performance critical and isn't really any easier way because chessground
+    const chessjsMove = chess.moves({ square: moveFrom, verbose: true })
+        .filter((move) => move.to === moveTo && (movePromo ? move.promotion === movePromo : !move.promotion))[0];
+
+    // edge cases
+    if (chessjsMove.isEnPassant()) {
+        // a little hacky or very nice depending on your perspective
+        const capturedSq = moveFrom.charAt(0) + moveTo.charAt(1);
+        ground.setPieces(new Map().set(capturedSq, undefined));
+    } else if (chessjsMove.isPromotion()) {
+        const pieceFullname = {
+            'p': 'pawn',
+            'n': 'knight',
+            'b': 'bishop',
+            'r': 'rook',
+            'q': 'queen',
+            'k': 'king'
+        };
+        const piece = {
+            role: pieceFullname[movePromo],
+            color: chess.turn(),
+            promoted: true
+        };
+        ground.setPieces(new Map().set(moveTo, piece));
+    }
+
+    // do this after because above depends on it being the mover's turn
+    chess.move(chessjsMove);
     ground.set({ check: chess.inCheck() });
+
     if (chess.isGameOver()) {
         if (chess.isCheckmate()) {
             // player got mated
@@ -96,7 +126,7 @@ maxDepthTimeElem.addEventListener("change", () => {
 });
 
 const config = {
-    fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    fen: "r1bqkbnr/ppp1pppp/2n5/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3",
     movable: {
         free: false,
         events: {
@@ -113,7 +143,7 @@ const config = {
     }
 };
 
-chess = new Chess();
+chess = new Chess(config.fen);
 ground = Chessground(document.getElementById("board"), config);
 let engineReady = false;
 let queueEngineStart = false;
@@ -139,6 +169,7 @@ updateDests();
 worker.onmessage = (e) => {
     if (e.data === "init") {
         worker.postMessage(["reset"]);
+        worker.postMessage(["fenGame", config.fen]);
         engineReady = true;
         if (queueEngineStart) {
             troutThink();

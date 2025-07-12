@@ -48,6 +48,9 @@ self.onmessage = (e) => {
             ffiEnv = inst.exports.ffiNewEnv();
             ffiGame = inst.exports.ffiNewGame();
             break;
+        case "fenGame":
+            ffiGame = inst.exports.ffiFenGame(msg[1]);
+            break;
         case "makeMove":
             inst.exports.ffiMakeMove(ffiGame, sqToInt(msg[1]), sqToInt(msg[2]), msg[3]);
             break;

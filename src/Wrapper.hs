@@ -1,10 +1,13 @@
-module Wrapper (ffiNewEnv, ffiNewGame, ffiMakeMove, ffiBestMove) where
+module Wrapper (ffiNewEnv, ffiNewGame, ffiFenGame, ffiMakeMove, ffiBestMove) where
 
 import Control.Monad.ST (RealWorld, stToIO)
 import Control.Monad.Trans.Reader (ReaderT (runReaderT))
+import Data.Either (fromRight)
 import Data.Int (Int16)
 import Data.Maybe (fromJust)
 import Foreign (StablePtr, deRefStablePtr, freeStablePtr, newStablePtr)
+import GHC.Wasm.Prim (JSString, fromJSString)
+import Trout.Fen.Parse (fenToGame, readFen)
 import Trout.Game (Game (..), allMoves, makeMove, startingGame)
 import Trout.Game.Move (Move (..), SpecialMove (..))
 import Trout.Search (SearchEnv, bestMove, newEnv)
@@ -14,6 +17,10 @@ ffiNewEnv = stToIO (newEnv (16 * 1000000)) >>= newStablePtr
 
 ffiNewGame :: IO (StablePtr Game)
 ffiNewGame = newStablePtr startingGame
+
+-- super dirty and breakable but...
+ffiFenGame :: JSString -> IO (StablePtr Game)
+ffiFenGame = newStablePtr . fenToGame . fromRight undefined . readFen . fromJSString
 
 ffiMakeMove :: StablePtr Game -> Int -> Int -> Int -> IO (StablePtr Game)
 ffiMakeMove gamePtr from to promo = do

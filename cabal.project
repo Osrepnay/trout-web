@@ -1,7 +1,10 @@
 packages: .
+
+index-state: 2025-07-09T19:08:24Z
+
 -- before so it doesn't interfere with with-compiler
 -- import: https://www.stackage.org/lts-22.44/cabal.config
 source-repository-package
     type: git
     location: https://github.com/Osrepnay/trout.git
-    tag: 1.0
+    tag: 1.0.1
