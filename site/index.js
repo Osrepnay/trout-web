@@ -48,7 +48,10 @@ function playerLose() {
     wastedInner.style.display = "none";
     wastedWrapper.style.zIndex = "999";
     wastedWrapper.classList.add("wasted-wrapper-darken");
-    setTimeout(() => wastedInner.style.display = "flex", 1500);
+    setTimeout(() => {
+        wastedInner.style.display = "flex"
+        wastedWrapper.addEventListener("click", () => wastedWrapper.style.display = "none");
+    }, 1500);
 }
 
 function playerWin() {
@@ -57,44 +60,31 @@ function playerWin() {
 }
 
 function playerDraw() {
+    troutImg.classList.add("trout-img-draw");
     gameOver();
-    troutImg.src = "draw.png";
 }
 
-// TODO promotions!!!!!
-function moveUpdate(moveFrom, moveTo, movePromo) {
-    worker.postMessage(["makeMove", moveFrom, moveTo, movePromo]);
+const promoOverlay = document.getElementById("promo-pieces");
+const promoElems = promoOverlay.children;
 
-    // kinda gross because generates all moves to find one but
-    // its not performance critical and isn't really any easier way because chessground
-    const chessjsMove = chess.moves({ square: moveFrom, verbose: true })
-        .filter((move) => move.to === moveTo && (movePromo ? move.promotion === movePromo : !move.promotion))[0];
+// chessground-chessjs conversion
+const pieceFullname = {
+    'p': 'pawn',
+    'n': 'knight',
+    'b': 'bishop',
+    'r': 'rook',
+    'q': 'queen',
+    'k': 'king'
+};
+const colorFullname = {
+    "w": "white",
+    "b": "black"
+};
 
-    // edge cases
-    if (chessjsMove.isEnPassant()) {
-        // a little hacky or very nice depending on your perspective
-        const capturedSq = moveFrom.charAt(0) + moveTo.charAt(1);
-        ground.setPieces(new Map().set(capturedSq, undefined));
-    } else if (chessjsMove.isPromotion()) {
-        const pieceFullname = {
-            'p': 'pawn',
-            'n': 'knight',
-            'b': 'bishop',
-            'r': 'rook',
-            'q': 'queen',
-            'k': 'king'
-        };
-        const piece = {
-            role: pieceFullname[movePromo],
-            color: chess.turn(),
-            promoted: true
-        };
-        ground.setPieces(new Map().set(moveTo, piece));
-    }
-
-    // do this after because above depends on it being the mover's turn
+function moveUpdate(chessjsMove) {
+    const moverTurn = chess.turn();
     chess.move(chessjsMove);
-    ground.set({ check: chess.inCheck() });
+    ground.set({ check: chess.inCheck() ? colorFullname[chess.turn()] : undefined });
 
     if (chess.isGameOver()) {
         if (chess.isCheckmate()) {
@@ -108,13 +98,72 @@ function moveUpdate(moveFrom, moveTo, movePromo) {
         } else {
             playerDraw();
         }
+        return false;
+    } else {
+        // edge cases
+        if (chessjsMove.isEnPassant()) {
+            // a little hacky or very nice depending on your perspective
+            const capturedSq = chessjsMove.to.charAt(0) + chessjsMove.from.charAt(1);
+            ground.setPieces(new Map().set(capturedSq, undefined));
+        } else if (chessjsMove.isPromotion()) {
+            const piece = {
+                role: pieceFullname[chessjsMove.promotion],
+                color: colorFullname[moverTurn],
+                promoted: true
+            };
+            ground.setPieces(new Map().set(chessjsMove.to, piece));
+        }
+
+        const allPieces = ["p", "n", "b", "r", "q", "k"];
+        worker.postMessage(["makeMove", chessjsMove.from, chessjsMove.to, allPieces.indexOf(chessjsMove.promotion)]);
+        return true;
+    }
+}
+
+function humanMove(moveFrom, moveTo) {
+    // kinda gross because generates all moves to find one but
+    // its not performance critical and isn't really any easier way because chessground
+    const possibleMoves = chess.moves({ square: moveFrom, verbose: true }).filter((move) => move.to === moveTo);
+
+    // no promo
+    if (possibleMoves.length === 1) {
+        if (moveUpdate(possibleMoves[0])) {
+            troutThink();
+            worker.postMessage(["bestMove", bestMoveTime]);
+        }
+    // promo
+    } else {
+        const findCorrectMove = (promo) => possibleMoves.filter((m) => m.promotion == promo)[0];
+        const promoPieces = ["n", "b", "r", "q"];
+        // this is messed up
+        // why does js need the function ref?
+        let promoHandlers = [];
+        for (let i = 0; i < promoElems.length; i++) {
+            promoElems[i].classList.add(colorFullname[chess.turn()]);
+            let handler = () => {
+                promoOverlay.style.display = "none";
+                for (let j = 0; j < promoElems.length; j++) {
+                    promoElems[j].removeEventListener("click", promoHandlers[j]);
+                    promoElems[j].classList.remove(chess.turn());
+                }
+                if (moveUpdate(findCorrectMove(promoPieces[i]))) {
+                    troutThink();
+                    worker.postMessage(["bestMove", bestMoveTime]);
+                }
+            };
+            promoHandlers.push(handler);
+            promoElems[i].addEventListener("click", handler);
+        }
+        promoOverlay.style.display = "flex";
     }
 }
 
 function programmaticMove(moveFrom, moveTo, movePromo) {
     ground.move(moveFrom, moveTo);
     ground.set({ turnColor: playerColor });
-    moveUpdate(moveFrom, moveTo);
+    const chessjsMove = chess.moves({ square: moveFrom, verbose: true })
+        .filter((move) => move.to === moveTo && (!movePromo || move.promotion == movePromo))[0];
+    moveUpdate(chessjsMove);
     updateDests();
 }
 
@@ -126,15 +175,11 @@ maxDepthTimeElem.addEventListener("change", () => {
 });
 
 const config = {
-    fen: "r1bqkbnr/ppp1pppp/2n5/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3",
+    fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
     movable: {
         free: false,
         events: {
-            after: (orig, dest, metadata) => {
-                moveUpdate(orig, dest, '');
-                troutThink();
-                worker.postMessage(["bestMove", bestMoveTime]);
-            }
+            after: (orig, dest, metadata) => humanMove(orig, dest)
         }
     },
     premovable: {
@@ -148,19 +193,28 @@ ground = Chessground(document.getElementById("board"), config);
 let engineReady = false;
 let queueEngineStart = false;
 
-document.getElementById("white-overlay").addEventListener("click", () => {
-    playerColor = "white";
-    document.getElementById("color-chooser").style = "display: none";
-});
-document.getElementById("black-overlay").addEventListener("click", () => {
-    playerColor = "black";
-    document.getElementById("color-chooser").style = "display: none";
-    ground.set({ orientation: "black" });
+function tryStartEngine() {
     if (engineReady) {
         troutThink();
         worker.postMessage(["bestMove", bestMoveTime]);
     } else {
         queueEngineStart = true;
+    }
+}
+
+document.getElementById("white-overlay").addEventListener("click", () => {
+    playerColor = "white";
+    document.getElementById("color-chooser").style.display = "none";
+    if (chess.turn() !== "w") {
+        tryStartEngine();
+    }
+});
+document.getElementById("black-overlay").addEventListener("click", () => {
+    playerColor = "black";
+    document.getElementById("color-chooser").style.display = "none";
+    ground.set({ orientation: "black" });
+    if (chess.turn() !== "b") {
+        tryStartEngine();
     }
 });
 

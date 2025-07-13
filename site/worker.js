@@ -62,12 +62,14 @@ self.onmessage = (e) => {
             let nowTime = Date.now();
             // limit depth to 50 for pathological cases like checkmate depth spam
             while (nowTime - lastTime < timePerDepth && depth < 50) {
+                console.log("depth: " + depth);
                 moveRaw = inst.exports.ffiBestMove(depth, ffiGame, ffiEnv);
                 depth++;
                 lastTime = nowTime;
                 nowTime = Date.now();
             }
-            const pieces = ['p', 'n', 'b', 'r', 'q', 'k'];
+            // if it's "promoting" to a pawn that means there's no promotion
+            const pieces = ['', 'n', 'b', 'r', 'q', ''];
             // it's just how it is
             // can't really return as more than one int conveniently
             let movePromo = pieces[Math.floor(moveRaw / (64 * 64))];
