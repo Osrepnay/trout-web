@@ -203,6 +203,8 @@ function tryStartEngine() {
 }
 
 document.getElementById("white-overlay").addEventListener("click", () => {
+    chess.setHeader("White", "You");
+    chess.setHeader("Black", "Trout");
     playerColor = "white";
     document.getElementById("color-chooser").style.display = "none";
     if (chess.turn() !== "w") {
@@ -210,6 +212,8 @@ document.getElementById("white-overlay").addEventListener("click", () => {
     }
 });
 document.getElementById("black-overlay").addEventListener("click", () => {
+    chess.setHeader("Black", "You");
+    chess.setHeader("White", "Trout");
     playerColor = "black";
     document.getElementById("color-chooser").style.display = "none";
     ground.set({ orientation: "black" });
@@ -235,3 +239,20 @@ worker.onmessage = (e) => {
         troutNeutral();
     }
 };
+
+document.getElementById("pgn-button").addEventListener("click", () => {
+    const check = document.getElementById("pgn-check");
+    navigator.clipboard.writeText(chess.pgn())
+        .then(
+            () => {
+                check.innerHTML = "✔️";
+                check.classList.add("pgn-check-checked");
+                setTimeout(() => check.classList.remove("pgn-check-checked"), 1000);
+            },
+            () => {
+                check.innerHTML = "Couldn't copy!";
+                check.classList.add("pgn-check-checked");
+                setTimeout(() => check.classList.remove("pgn-check-checked"), 1000);
+            }
+        );
+});
