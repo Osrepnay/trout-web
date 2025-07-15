@@ -4,7 +4,8 @@
     <link rel="stylesheet" type="text/css" href="dist/assets/chessground.brown.css">
     <link rel="stylesheet" type="text/css" href="dist/assets/chessground.cburnett.css">
     <title>Trout Web</title>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 html {
     min-height: 100%;
@@ -20,7 +21,7 @@ body {
 }
 
 #board-container {
-    width: min(90%, 50vh);
+    width: min(80%, 50vh);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -51,7 +52,7 @@ body {
 
 .overlay-side {
     flex-grow: 1;
-    font-size: 48pt;
+    font-size: 6vw;
     font-family: monospace;
     display: flex;
     align-items: center;
@@ -86,8 +87,9 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 8px;
+    padding: 0px;
     margin-block: auto;
+    width: 100%;
 }
 
 #trout-img {

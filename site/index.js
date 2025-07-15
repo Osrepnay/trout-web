@@ -240,19 +240,23 @@ worker.onmessage = (e) => {
     }
 };
 
-document.getElementById("pgn-button").addEventListener("click", () => {
+document.getElementById("pgn-button").addEventListener("click", async () => {
     const check = document.getElementById("pgn-check");
-    navigator.clipboard.writeText(chess.pgn())
-        .then(
-            () => {
-                check.innerHTML = "✔️";
-                check.classList.add("pgn-check-checked");
-                setTimeout(() => check.classList.remove("pgn-check-checked"), 1000);
-            },
-            () => {
-                check.innerHTML = "Couldn't copy!";
-                check.classList.add("pgn-check-checked");
-                setTimeout(() => check.classList.remove("pgn-check-checked"), 1000);
-            }
-        );
+    const fail = () => {
+        check.innerHTML = "Couldn't copy!";
+        check.classList.add("pgn-check-checked");
+    };
+    if (!navigator.clipboard.writeText) {
+        fail();
+    } else {
+        await navigator.clipboard.writeText(chess.pgn())
+            .then(
+                () => {
+                    check.innerHTML = "✔️";
+                    check.classList.add("pgn-check-checked");
+                    setTimeout(() => check.classList.remove("pgn-check-checked"), 1000);
+                },
+                fail
+            );
+    }
 });
