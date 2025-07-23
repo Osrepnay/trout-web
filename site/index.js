@@ -81,6 +81,16 @@ const colorFullname = {
     "b": "black"
 };
 
+let engineReady = false;
+let messageQueue = [];
+function postMessageWrapper(data) {
+    if (!engineReady) {
+        messageQueue.push(data);
+    } else {
+        worker.postMessage(data);
+    }
+}
+
 function moveUpdate(chessjsMove) {
     const moverTurn = chess.turn();
     chess.move(chessjsMove);
@@ -115,7 +125,7 @@ function moveUpdate(chessjsMove) {
         }
 
         const allPieces = ["p", "n", "b", "r", "q", "k"];
-        worker.postMessage(["makeMove", chessjsMove.from, chessjsMove.to, allPieces.indexOf(chessjsMove.promotion)]);
+        postMessageWrapper(["makeMove", chessjsMove.from, chessjsMove.to, allPieces.indexOf(chessjsMove.promotion)]);
         return true;
     }
 }
@@ -129,7 +139,7 @@ function humanMove(moveFrom, moveTo) {
     if (possibleMoves.length === 1) {
         if (moveUpdate(possibleMoves[0])) {
             troutThink();
-            worker.postMessage(["bestMove", bestMoveTime]);
+            postMessageWrapper(["bestMove", bestMoveTime]);
         }
     // promo
     } else {
@@ -148,7 +158,7 @@ function humanMove(moveFrom, moveTo) {
                 }
                 if (moveUpdate(findCorrectMove(promoPieces[i]))) {
                     troutThink();
-                    worker.postMessage(["bestMove", bestMoveTime]);
+                    postMessageWrapper(["bestMove", bestMoveTime]);
                 }
             };
             promoHandlers.push(handler);
@@ -190,7 +200,6 @@ const config = {
 
 chess = new Chess(config.fen);
 ground = Chessground(document.getElementById("board"), config);
-let engineReady = false;
 let queueEngineStart = false;
 
 function tryStartEngine() {
@@ -229,9 +238,13 @@ worker.onmessage = (e) => {
         worker.postMessage(["reset"]);
         worker.postMessage(["fenGame", config.fen]);
         engineReady = true;
+        troutImg.src = "trout.png";
         if (queueEngineStart) {
             troutThink();
             worker.postMessage(["bestMove", bestMoveTime]);
+        }
+        for (const msg of messageQueue) {
+            worker.postMessage(msg);
         }
     } else {
         const [f, t, p] = e.data;
