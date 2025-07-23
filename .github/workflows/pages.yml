@@ -47,8 +47,8 @@ jobs:
         run: |
           cabal update
           ghcup install cabal 3.12.1.0
-      - name: Install npm
-        run: sudo apt-get -y install npm
+      - name: Install apt deps
+        run: sudo apt-get -y install npm binaryen 
       - name: Build site
         run: |
           cd site
