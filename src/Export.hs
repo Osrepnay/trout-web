@@ -1,4 +1,4 @@
-module Export where
+module Export () where
 
 import Control.Monad.ST (RealWorld)
 import Data.Int (Int16)
